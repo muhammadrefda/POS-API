@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace POS_API.Models
 {
@@ -10,11 +11,10 @@ namespace POS_API.Models
         public int Stock { get; set; }
         public bool Active { get; set; } = true;
 
-        // 1 to m
-        public long CategoryId { get; set; }
-        public Category? Category { get; set; }
+        [ForeignKey("Category")]
+        public int CategoryId { get; set; }
 
-        // m to m
-        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+        // Objek navigasi yang akan di-load oleh .Include()
+        public Category Category { get; set; }
     }
 }

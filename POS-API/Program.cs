@@ -25,7 +25,7 @@ namespace POS_API
 
                                       // --- CATATAN ---
                                       // Untuk produksi, lebih aman seperti ini:
-                                      // policy.WithOrigins("http://localhost:5500") // Port dari Live Server
+                                      //policy.WithOrigins("http://localhost:5500") // Port dari Live Server
                                       //       .AllowAnyHeader()
                                       //       .AllowAnyMethod();
                                   });
@@ -55,6 +55,8 @@ namespace POS_API
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+
             app.UseCors(MyAllowSpecificOrigins);
 
             app.UseAuthorization();

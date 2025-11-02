@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using POS_API.Data;
 using POS_API.Models;
-using Microsoft.EntityFrameworkCore; 
+using POS_API.Helpers; // <-- 1. JANGAN LUPA using helper ApiResponse
 
 namespace POS_API.Controllers
 {
@@ -11,74 +12,133 @@ namespace POS_API.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // 2. Buat Constructor untuk menerima DbContext (Dependency Injection)
         public CategoriesApiController(ApplicationDbContext context)
         {
             _context = context;
         }
 
         // GET: api/CategoriesApi
+        // Perubahan 1: Return type diubah ke ApiResponse
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+        public async Task<ActionResult<ApiResponse<IEnumerable<Category>>>> GetCategories()
         {
-            // 3. Ambil data dari database, bukan static list
-            var categories = await _context.Categories.ToListAsync();
-            return Ok(categories);
+            try // Perubahan 2: Dibungkus try-catch
+            {
+                var categories = await _context.Categories.ToListAsync();
+
+                // Perubahan 3: Dibungkus ApiResponse sukses
+                return Ok(new ApiResponse<IEnumerable<Category>>(categories, "Data kategori berhasil diambil"));
+            }
+            catch (Exception ex)
+            {
+                // Perubahan 4: Dibungkus ApiResponse gagal
+                return StatusCode(500, new ApiResponse<IEnumerable<Category>>($"Error server: {ex.Message}"));
+            }
         }
 
-        // GET: api/CategoriesApi/5 (Method tambahan, PENTING untuk POST)
+        // GET: api/CategoriesApi/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Category>> GetCategory(int id)
+        public async Task<ActionResult<ApiResponse<Category>>> GetCategory(long id) // Standarisasi ke long
         {
-            var category = await _context.Categories.FindAsync(id);
-
-            if (category == null)
+            try
             {
-                return NotFound();
-            }
+                var category = await _context.Categories.FindAsync(id);
 
-            return Ok(category);
+                if (category == null)
+                {
+                    return NotFound(new ApiResponse<Category>("Kategori tidak ditemukan."));
+                }
+
+                return Ok(new ApiResponse<Category>(category, "Kategori ditemukan."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<Category>($"Error server: {ex.Message}"));
+            }
         }
 
         // POST: api/CategoriesApi
         [HttpPost]
-        public async Task<ActionResult<Category>> PostCategory([FromBody] Category category)
+        public async Task<ActionResult<ApiResponse<Category>>> PostCategory([FromBody] Category category)
         {
             if (category == null || string.IsNullOrEmpty(category.CategoryName))
             {
-                return BadRequest("Nama kategori tidak boleh kosong.");
+                return BadRequest(new ApiResponse<Category>("Nama kategori tidak boleh kosong."));
             }
 
-            // 4. Tambahkan data ke DbContext
-            _context.Categories.Add(category);
+            if (await _context.Categories.AnyAsync(c => c.CategoryName == category.CategoryName))
+            {
+                return BadRequest(new ApiResponse<Category>("Kategori dengan nama tersebut sudah ada."));
+            }
 
-            // 5. Simpan perubahan ke database
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Categories.Add(category);
+                await _context.SaveChangesAsync();
 
-            // Return 201 Created dengan data yang baru dibuat
-            // Menggunakan method GetCategory yang baru kita buat
-            return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
+                var apiResponse = new ApiResponse<Category>(category, "Kategori berhasil ditambahkan.");
+                return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, apiResponse);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<Category>($"Error saat menyimpan: {ex.Message}"));
+            }
+        }
+
+        // PUT: api/CategoriesApi/5
+        // Diubah ke PUT agar konsisten dengan ProductsApi dan logika modal
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ApiResponse<object>>> PutCategory(long id, [FromBody] Category category)
+        {
+            if (id != category.Id)
+            {
+                return BadRequest(new ApiResponse<object>("ID kategori tidak cocok."));
+            }
+
+            if (await _context.Categories.AnyAsync(c => c.CategoryName == category.CategoryName && c.Id != id))
+            {
+                return BadRequest(new ApiResponse<object>("Nama kategori tersebut sudah digunakan."));
+            }
+
+            _context.Entry(category).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return NotFound(new ApiResponse<object>("Kategori tidak ditemukan (kemungkinan sudah dihapus)."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<object>($"Error saat update: {ex.Message}"));
+            }
+
+            return Ok(new ApiResponse<object>(null, "Kategori berhasil diperbarui."));
         }
 
         // DELETE: api/CategoriesApi/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCategory(int id)
+        public async Task<ActionResult<ApiResponse<object>>> DeleteCategory(long id)
         {
-            // 6. Cari data di database
-            var categoryToDelete = await _context.Categories.FindAsync(id);
-
-            if (categoryToDelete == null)
+            try
             {
-                return NotFound();
+                var category = await _context.Categories.FindAsync(id);
+                if (category == null)
+                {
+                    return NotFound(new ApiResponse<object>("Kategori tidak ditemukan."));
+                }
+
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponse<object>(null, "Kategori berhasil dihapus."));
             }
-
-            // 7. Hapus data dari DbContext
-            _context.Categories.Remove(categoryToDelete);
-
-            // 8. Simpan perubahan ke database
-            await _context.SaveChangesAsync();
-
-            return NoContent(); // Sukses
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<object>($"Error saat menghapus: {ex.Message}"));
+            }
         }
     }
 }
