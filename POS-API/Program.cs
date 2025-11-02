@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using POS_API.Data;
 
 namespace POS_API
 {
@@ -5,7 +7,35 @@ namespace POS_API
     {
         public static void Main(string[] args)
         {
+            var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                                  policy =>
+                                  {
+                                      // Ini cara termudah untuk development
+                                      // Mengizinkan origin, method, dan header APAPUN
+                                      policy.AllowAnyOrigin()
+                                            .AllowAnyHeader()
+                                            .AllowAnyMethod();
+
+                                      // --- CATATAN ---
+                                      // Untuk produksi, lebih aman seperti ini:
+                                      //policy.WithOrigins("http://localhost:5500") // Port dari Live Server
+                                      //       .AllowAnyHeader()
+                                      //       .AllowAnyMethod();
+                                  });
+            });
+
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+            builder.Services.AddDbContext<ApplicationDbContext>(option => option.UseSqlServer(connectionString));
+
+
 
             // Add services to the container.
 
@@ -24,6 +54,10 @@ namespace POS_API
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+
+            app.UseCors(MyAllowSpecificOrigins);
 
             app.UseAuthorization();
 
