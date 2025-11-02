@@ -11,10 +11,13 @@ namespace POS_API.Models
         public int Stock { get; set; }
         public bool Active { get; set; } = true;
 
+
+
+
         [ForeignKey("Category")]
-        public int CategoryId { get; set; }
+        public long CategoryId { get; set; }
 
         // Objek navigasi yang akan di-load oleh .Include()
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
     }
 }

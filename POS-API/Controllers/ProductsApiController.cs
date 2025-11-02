@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POS_API.Data;
+using POS_API.Helpers;
 using POS_API.Models;
-using POS_API.Helpers; // <-- 1. JANGAN LUPA using helper baru kita
 
 namespace POS_API.Controllers
 {
@@ -17,65 +18,48 @@ namespace POS_API.Controllers
             _context = context;
         }
 
-        // GET: api/ProductsApi
-        // Perubahan 1: Return type
+        //get api
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<Product>>>> GetProducts()
         {
             try
             {
-                var products = await _context.Products
-                                             .Include(p => p.Category)
-                                             .ToListAsync();
+                var products = await _context.Products.Include(p => p.Category).ToListAsync();
 
-                // Perubahan 2: Bungkus dengan ApiResponse sukses
                 return Ok(new ApiResponse<IEnumerable<Product>>(products, "Data produk berhasil diambil"));
             }
             catch (Exception ex)
             {
-                // Perubahan 3: Bungkus dengan ApiResponse gagal
-                return StatusCode(500, new ApiResponse<IEnumerable<Product>>($"Error server: {ex.Message}"));
+                return StatusCode(500, new ApiResponse<IEnumerable<Product>>($"Error Server: {ex.Message}"));
             }
         }
 
-        // GET: api/ProductsApi/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ApiResponse<Product>>> GetProduct(long id)
         {
             try
             {
-                var product = await _context.Products
-                                            .Include(p => p.Category)
-                                            .FirstOrDefaultAsync(p => p.Id == id);
+                var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
 
                 if (product == null)
-                {
-                    // Perubahan 4: Respon NotFound yang standar
-                    return NotFound(new ApiResponse<Product>("Produk tidak ditemukan."));
-                }
+                    return NotFound(new ApiResponse<Product>("Produk tidak ditemukan"));
 
-                return Ok(new ApiResponse<Product>(product, "Produk ditemukan."));
+                return Ok(new ApiResponse<Product>(product, "Produk ditemukan"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiResponse<Product>($"Error server (ID: {id}): {ex.Message}"));
+                return StatusCode(500, new ApiResponse<Product>($"Error server (ID: {id}) : {ex.Message}"));
             }
         }
 
-        // POST: api/ProductsApi
         [HttpPost]
         public async Task<ActionResult<ApiResponse<Product>>> PostProduct([FromBody] Product product)
         {
             if (product == null)
-            {
-                return BadRequest(new ApiResponse<Product>("Data produk tidak valid."));
-            }
+                return BadRequest(new ApiResponse<Product>("Data produk tidak valid"));
 
-            if (await _context.Products.AnyAsync(p => p.ProductName == product.ProductName))
-            {
-                // Perubahan 5: Respon BadRequest yang standar
-                return BadRequest(new ApiResponse<Product>($"Produk dengan nama '{product.ProductName}' sudah ada."));
-            }
+            if(await _context.Products.AnyAsync(p => p.ProductName == product.ProductName))
+                return BadRequest(new ApiResponse<Product>($"Produk dengan nama '{product.ProductName} sudah ada.'"));
 
             try
             {
@@ -83,8 +67,8 @@ namespace POS_API.Controllers
                 await _context.SaveChangesAsync();
                 await _context.Entry(product).Reference(p => p.Category).LoadAsync();
 
-                // Perubahan 6: Bungkus data di CreatedAtAction
-                var apiResponse = new ApiResponse<Product>(product, "Produk berhasil ditambahkan.");
+                var apiResponse = new ApiResponse<Product>(product, "Produk berhasil ditambahkan");
+
                 return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, apiResponse);
             }
             catch (Exception ex)
@@ -93,21 +77,26 @@ namespace POS_API.Controllers
             }
         }
 
-        // PUT: api/ProductsApi/5
+        //PUT API
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> PutProduct(long id, [FromBody] Product product) // Return ApiResponse<object>
+        public async Task<ActionResult<ApiResponse<object>>> PutProduct(long id, [FromBody] Product product)
         {
-            if (id != product.Id)
+            var existingProduct = await _context.Products.FindAsync(id);
+
+            if (existingProduct == null)
+                return NotFound(new ApiResponse<object>("Data tidak ditemukan"));
+
+            var existingCategory = await _context.Categories.AnyAsync(c => c.Id == product.CategoryId);
+
+            if (!existingCategory)
             {
-                return BadRequest(new ApiResponse<object>("ID produk tidak cocok."));
+                return NotFound(new ApiResponse<object>($"Category id {id} tidak ditemukan di database"));
             }
 
-            if (await _context.Products.AnyAsync(p => p.ProductName == product.ProductName && p.Id != id))
-            {
-                return BadRequest(new ApiResponse<object>("Nama produk tersebut sudah digunakan oleh produk lain."));
-            }
+            product.Id = id;
+            product.UpdatedAt = DateTime.Now;
 
-            _context.Entry(product).State = EntityState.Modified;
+            _context.Entry(existingProduct).CurrentValues.SetValues(product);
 
             try
             {
@@ -115,39 +104,40 @@ namespace POS_API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                return NotFound(new ApiResponse<object>("Data produk tidak ditemukan (kemungkinan sudah dihapus)."));
+                return NotFound(new ApiResponse<object>("Data produk tidak ditemukan (kemungkinan sudah dihapus)"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiResponse<object>($"Error saat update: {ex.Message}"));
+                var errorMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMessage += " | Inner Exception: " + ex.InnerException.Message;
+                }
+                return StatusCode(500, new ApiResponse<object>($"Error saat update: {errorMessage}"));
             }
 
-            // Perubahan 7: Ganti NoContent() dengan Ok() agar bisa kirim pesan
-            return Ok(new ApiResponse<object>(null, "Produk berhasil diperbarui."));
+            return Ok(new ApiResponse<object>(null, "Data berhasil diupdate"));
         }
 
-        // DELETE: api/ProductsApi/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteProduct(long id) // Return ApiResponse<object>
+        public async Task<ActionResult<ApiResponse<object>>> DeleteProduct(long id)
         {
             try
             {
                 var product = await _context.Products.FindAsync(id);
                 if (product == null)
                 {
-                    return NotFound(new ApiResponse<object>("Produk tidak ditemukan."));
+                    return NotFound(new ApiResponse<object>("product tidak ditemukan."));
                 }
 
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
 
-                // Perubahan 8: Ganti NoContent() dengan Ok()
                 return Ok(new ApiResponse<object>(null, "Produk berhasil dihapus."));
             }
             catch (Exception ex)
             {
-                // Ini akan menangkap error foreign key
-                return StatusCode(500, new ApiResponse<object>($"Error saat menghapus: {ex.Message}. (Mungkin produk sudah ada di transaksi?)"));
+                return StatusCode(500, new ApiResponse<object>($"Error saat menghapus: {ex.Message}"));
             }
         }
     }

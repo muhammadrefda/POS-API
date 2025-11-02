@@ -43,7 +43,7 @@ namespace POS_API.Data
                 ProductName = "Keripik Kentang Original",
                 Price = 15000,
                 Stock = 100,
-                CategoryId = Convert.ToInt32(foodCategory.Id),
+                CategoryId = foodCategory.Id,
             };
 
             modelBuilder.Entity<Product>().HasData(product);
