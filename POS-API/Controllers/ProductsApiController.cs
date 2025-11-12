@@ -1,143 +1,122 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using POS_API.Data;
-using POS_API.Helpers;
-using POS_API.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using POS_API.DTOs;
+using POS_API.Interfaces;
+using POS_API.Helpers; // <-- Jangan lupa tambahkan ini
 
 namespace POS_API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/products")]
     public class ProductsApiController : ControllerBase
+    
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
 
-        public ProductsApiController(ApplicationDbContext context)
+        public ProductsApiController(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
-        //get api
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<IEnumerable<Product>>>> GetProducts()
+        public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var products = await _context.Products.Include(p => p.Category).ToListAsync();
+            var products = await _productService.GetAllAsync();
 
-                return Ok(new ApiResponse<IEnumerable<Product>>(products, "Data produk berhasil diambil"));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<IEnumerable<Product>>($"Error Server: {ex.Message}"));
-            }
+            // Bungkus data dengan ApiResponse
+            var response = new ApiResponse<IEnumerable<ProductDto>>(products, "Products retrieved successfully");
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponse<Product>>> GetProduct(long id)
+        public async Task<IActionResult> GetById(long id)
         {
-            try
+            var product = await _productService.GetByIdAsync(id);
+            if (product == null)
             {
-                var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
-
-                if (product == null)
-                    return NotFound(new ApiResponse<Product>("Produk tidak ditemukan"));
-
-                return Ok(new ApiResponse<Product>(product, "Produk ditemukan"));
+                // Kirim response error 404 menggunakan ApiResponse
+                var errorResponse = new ApiResponse<ProductDto>($"Product with ID {id} not found.");
+                return NotFound(errorResponse);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<Product>($"Error server (ID: {id}) : {ex.Message}"));
-            }
+
+            // Bungkus data dengan ApiResponse
+            var response = new ApiResponse<ProductDto>(product, "Product retrieved successfully");
+            return Ok(response);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<Product>>> PostProduct([FromBody] Product product)
+        public async Task<IActionResult> Create([FromBody] ProductCreateDto productDto)
         {
-            if (product == null)
-                return BadRequest(new ApiResponse<Product>("Data produk tidak valid"));
-
-            if(await _context.Products.AnyAsync(p => p.ProductName == product.ProductName))
-                return BadRequest(new ApiResponse<Product>($"Produk dengan nama '{product.ProductName} sudah ada.'"));
-
-            try
+            if (!ModelState.IsValid)
             {
-                _context.Products.Add(product);
-                await _context.SaveChangesAsync();
-                await _context.Entry(product).Reference(p => p.Category).LoadAsync();
-
-                var apiResponse = new ApiResponse<Product>(product, "Produk berhasil ditambahkan");
-
-                return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, apiResponse);
+                // Ambil error dari ModelState dan kirim sebagai ApiResponse
+                // Ini adalah cara sederhana, bisa dibuat lebih kompleks untuk list semua error
+                var errors = ModelState.Values.SelectMany(v => v.Errors).First().ErrorMessage;
+                var errorResponse = new ApiResponse<ProductDto>(errors ?? "Invalid data provided");
+                return BadRequest(errorResponse);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<Product>($"Error saat menyimpan: {ex.Message}"));
-            }
+
+            var newProduct = await _productService.CreateAsync(productDto);
+
+            // Bungkus data dengan ApiResponse
+            var response = new ApiResponse<ProductDto>(newProduct, "Product created successfully");
+
+            // Kembalikan 201 Created
+            return CreatedAtAction(nameof(GetById), new { id = newProduct.Id }, response);
         }
 
-        //PUT API
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> PutProduct(long id, [FromBody] Product product)
+        public async Task<IActionResult> Update(long id, [FromBody] ProductUpdateDto productDto)
         {
-            var existingProduct = await _context.Products.FindAsync(id);
-
-            if (existingProduct == null)
-                return NotFound(new ApiResponse<object>("Data tidak ditemukan"));
-
-            var existingCategory = await _context.Categories.AnyAsync(c => c.Id == product.CategoryId);
-
-            if (!existingCategory)
+            if (!ModelState.IsValid)
             {
-                return NotFound(new ApiResponse<object>($"Category id {id} tidak ditemukan di database"));
+                var errors = ModelState.Values.SelectMany(v => v.Errors).First().ErrorMessage;
+                var errorResponse = new ApiResponse<object>(errors ?? "Invalid data provided");
+                return BadRequest(errorResponse);
             }
-
-            product.Id = id;
-            product.UpdatedAt = DateTime.Now;
-
-            _context.Entry(existingProduct).CurrentValues.SetValues(product);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _productService.UpdateAsync(id, productDto);
+
+                // Ubah 204 NoContent menjadi 200 OK dengan body ApiResponse
+                // Menggunakan 'object' sebagai T karena kita tidak mengembalikan data spesifik
+                var response = new ApiResponse<object>(null, "Product updated successfully");
+                return Ok(response);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound(new ApiResponse<object>("Data produk tidak ditemukan (kemungkinan sudah dihapus)"));
+                var errorResponse = new ApiResponse<object>(ex.Message);
+                return NotFound(errorResponse);
             }
             catch (Exception ex)
             {
-                var errorMessage = ex.Message;
-                if (ex.InnerException != null)
-                {
-                    errorMessage += " | Inner Exception: " + ex.InnerException.Message;
-                }
-                return StatusCode(500, new ApiResponse<object>($"Error saat update: {errorMessage}"));
+                // Penanganan error umum
+                var errorResponse = new ApiResponse<object>($"An error occurred: {ex.Message}");
+                return StatusCode(500, errorResponse);
             }
-
-            return Ok(new ApiResponse<object>(null, "Data berhasil diupdate"));
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteProduct(long id)
+        public async Task<IActionResult> Delete(long id)
         {
             try
             {
-                var product = await _context.Products.FindAsync(id);
-                if (product == null)
-                {
-                    return NotFound(new ApiResponse<object>("product tidak ditemukan."));
-                }
+                await _productService.DeleteAsync(id);
 
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
-
-                return Ok(new ApiResponse<object>(null, "Produk berhasil dihapus."));
+                // Ubah 204 NoContent menjadi 200 OK dengan body ApiResponse
+                var response = new ApiResponse<object>(null, "Product deleted successfully");
+                return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                var errorResponse = new ApiResponse<object>(ex.Message);
+                return NotFound(errorResponse);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiResponse<object>($"Error saat menghapus: {ex.Message}"));
+                // Penanganan error umum
+                var errorResponse = new ApiResponse<object>($"An error occurred: {ex.Message}");
+                return StatusCode(500, errorResponse);
             }
         }
     }
