@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using POS_API.Data;
 using POS_API.Data.Repositories;
 using POS_API.Interfaces;
+using POS_API.Repositories;
 using POS_API.Services;
 
 namespace POS_API
@@ -43,6 +44,8 @@ namespace POS_API
             // Add services to the container.
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
