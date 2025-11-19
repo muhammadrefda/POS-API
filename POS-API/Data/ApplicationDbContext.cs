@@ -15,6 +15,8 @@ namespace POS_API.Data
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<TransactionDetail> TransactionDetails { get; set; }
 
+        public DbSet<ProductTag> ProductTags { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -53,11 +55,27 @@ namespace POS_API.Data
                 Id = 1,
                 FullName = "Budi Santoso",
                 Email = "budi@example.com",
-                JoinDate = DateTime.UtcNow,
+                //JoinDate = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow
             };
 
             modelBuilder.Entity<Customer>().HasData(customer);
+
+            // 1. Tentukan Composite Key untuk tabel ProductTag
+            modelBuilder.Entity<ProductTag>()
+                .HasKey(pt => new { pt.ProductId, pt.TagId });
+
+            // 2. Konfigurasi relasi dari Product ke ProductTag
+            modelBuilder.Entity<ProductTag>()
+                .HasOne(pt => pt.Product)
+                .WithMany(p => p.ProductTags) // Mereferensi ICollection di Product.cs
+                .HasForeignKey(pt => pt.ProductId);
+
+            // 3. Konfigurasi relasi dari Tag ke ProductTag
+            modelBuilder.Entity<ProductTag>()
+                .HasOne(pt => pt.Tag)
+                .WithMany(t => t.ProductTags) // Mereferensi ICollection di Tag.cs
+                .HasForeignKey(pt => pt.TagId);
         }
     }
 

@@ -19,5 +19,7 @@ namespace POS_API.Models
 
         // Objek navigasi yang akan di-load oleh .Include()
         public Category? Category { get; set; }
+
+        public ICollection<ProductTag> ProductTags { get; set; } = new List<ProductTag>();
     }
 }

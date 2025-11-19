@@ -21,5 +21,6 @@ public class ProductCreateDto
 
     // Saat membuat produk, frontend akan mengirimkan
     // daftar ID dari tag yang dipilih.
-    public List<long> TagIds { get; set; }
+
+    public List<long> TagIds { get; set; } = new List<long>();
 }

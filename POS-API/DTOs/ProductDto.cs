@@ -16,6 +16,6 @@
 
         // Sebuah produk bisa punya banyak tag.
         // Kita kirim daftar nama tag-nya.
-        public List<string> Tags { get; set; }
+        public List<TagDto> Tags { get; set; } = new List<TagDto>();
     }
 }

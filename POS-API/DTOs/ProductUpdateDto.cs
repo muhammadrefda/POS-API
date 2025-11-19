@@ -24,5 +24,5 @@ public class ProductUpdateDto
     public bool Active { get; set; }
 
     // Pengguna juga bisa mengubah daftar tag yang terhubung.
-    public List<long> TagIds { get; set; }
+    public List<long> TagIds { get; set; } = new List<long>();
 }
