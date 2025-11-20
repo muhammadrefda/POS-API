@@ -14,6 +14,9 @@ namespace POS_API.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<TransactionDetail> TransactionDetails { get; set; }
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<ProductTag> ProductTags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,11 +56,27 @@ namespace POS_API.Data
                 Id = 1,
                 FullName = "Budi Santoso",
                 Email = "budi@example.com",
-                JoinDate = DateTime.UtcNow,
+                //JoinDate = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow
             };
 
             modelBuilder.Entity<Customer>().HasData(customer);
+
+            modelBuilder.Entity<ProductTag>().HasKey(pt => new { pt.ProductId, pt.TagId });
+
+            //relasi dari product ke productTag
+            modelBuilder.Entity<ProductTag>()
+                .HasOne(pt => pt.Product)
+                .WithMany(p => p.ProductTags)
+                .HasForeignKey(pt => pt.ProductId);
+
+            //relasi dari tag ke productTag
+            modelBuilder.Entity<ProductTag>()
+                .HasOne(pt => pt.Tag)
+                .WithMany(t => t.ProductTags)
+                .HasForeignKey(pt => pt.TagId);
+
+
         }
     }
 

@@ -1,76 +1,69 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using POS_API.DTOs;
 using POS_API.Helpers;
 using POS_API.Interfaces;
-using POS_API.Models;
+using POS_API.Services;
 
 namespace POS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
-    public class ProductsApiController : ControllerBase
+    public class CustomersApiController : ControllerBase
     {
-        private readonly IProductService _productService;
+        private readonly ICustomerService _customerService;
 
-        public ProductsApiController(IProductService productService)
+        public CustomersApiController(ICustomerService customerService)
         {
-            _productService = productService;
+            _customerService = customerService;
         }
 
-        //get api
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var products = await _productService.GetAllAsync();
-
-            var response = new ApiResponse<IEnumerable<ProductDto>>(products, "Products retrieved successfully");
-
+            var customers = await _customerService.GetAllAsync();
+            var response = new ApiResponse<IEnumerable<CustomerDto>>(customers, "Customers retrieved successfully");
             return Ok(response);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long id)
         {
-            var product = await _productService.GetByIdAsync(id);
-
-            if (product == null)
+            var customer = await _customerService.GetByIdAsync(id);
+            if (customer == null)
             {
-                var errorResponse = new ApiResponse<ProductDto>($"Product with ID {id} not found");
-
+                var errorResponse = new ApiResponse<CustomerDto>($"Customer with ID {id} not found.");
                 return NotFound(errorResponse);
             }
 
-            var response = new ApiResponse<ProductDto>(product, "Product retrieved successfully");
-            return Ok(response);
+            return Ok(customer);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductCreateDto productDto)
+        public async Task<IActionResult> Create([FromBody] CustomerCreateDto customerDto)
         {
             if (!ModelState.IsValid)
             {
-                //disini kita ambil error dari model state
-                var errors = ModelState.Values.SelectMany( v => v.Errors).First().ErrorMessage;
-
-                var errorResponse = new ApiResponse<ProductDto>(errors ?? "Invalid data provided");
-
+                var errors = ModelState.Values.SelectMany(v => v.Errors).First().ErrorMessage;
+                var errorResponse = new ApiResponse<CustomerDto>(errors ?? "Invalid data provided");
                 return BadRequest(errorResponse);
             }
 
-            var newProduct = await _productService.CreateAsync(productDto);
-
-            var response = new ApiResponse<ProductDto>(newProduct, "Product created successfully");
-
-            return CreatedAtAction(nameof(GetById), new { id = newProduct.Id }, response);
+            try
+            {
+                var newCustomer = await _customerService.CreateAsync(customerDto);
+                var response = new ApiResponse<CustomerDto>(newCustomer, "Customer created successfully");
+                return CreatedAtAction(nameof(GetById), new { id = newCustomer.Id }, response);
+            }
+            catch (Exception ex)
+            {
+                var errorResponse = new ApiResponse<object>($"An error occured: {ex.Message}");
+                return StatusCode(500, errorResponse);
+            }
         }
 
-        //PUT API
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, [FromBody] ProductUpdateDto productDto)
+        public async Task<IActionResult> Update(long id, [FromBody] CustomerUpdateDto customerDto)
         {
             if (!ModelState.IsValid)
             {
@@ -81,12 +74,12 @@ namespace POS_API.Controllers
 
                 return BadRequest(errorResponse);
             }
-            
+
             try
             {
-                await _productService.UpdateAsync(id, productDto);
+                await _customerService.UpdateAsync(id, customerDto);
 
-                var response = new ApiResponse<object>(null, "Product updated successfully");
+                var response = new ApiResponse<object>(null, "customer updated successfully");
                 return Ok(response);
             }
             catch (KeyNotFoundException ex)
@@ -106,9 +99,8 @@ namespace POS_API.Controllers
         {
             try
             {
-                await _productService.DeleteAsync(id);
-
-                var response = new ApiResponse<object>(null, "Product deleted successfully");
+                await _customerService.DeleteAsync(id);
+                var response = new ApiResponse<object>(null, "Customer deleted successfully");
                 return Ok(response);
             }
             catch (KeyNotFoundException ex)
@@ -122,5 +114,9 @@ namespace POS_API.Controllers
                 return StatusCode(500, errorResponse);
             }
         }
+
+
+
+
     }
 }
