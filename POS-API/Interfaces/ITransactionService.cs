@@ -6,6 +6,5 @@ namespace POS_API.Interfaces
     public interface ITransactionService
     {
         Task<Transaction> CreateTransactionAsync(TransactionCreateDto req, long cashierId);
-
     }
 }

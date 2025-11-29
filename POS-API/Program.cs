@@ -52,6 +52,7 @@ namespace POS_API
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ITransactionService, TransactionService>();
 
             string Base64UrlToBase64(string base64url)
             {
