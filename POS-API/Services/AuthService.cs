@@ -55,6 +55,7 @@ namespace POS_API.Services
                 throw new Exception("Username or Password is wrong");
             }
 
+
             //verifikasi password (hash vs plain)
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
@@ -70,7 +71,7 @@ namespace POS_API.Services
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("role", user.Role),
                 new Claim("id", user.Id.ToString()),
             };
 

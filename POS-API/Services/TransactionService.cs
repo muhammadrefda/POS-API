@@ -111,5 +111,32 @@ namespace POS_API.Services
                 throw;
             }
         }
+
+        public async Task<TransactionResponseDto> GetTransactionByidAsync(long id)
+        {
+            var t = await _transactionRepo.GetByIdAsync(id);
+            if ( t == null)
+            {
+                throw new Exception($"transaction with id: {id} is null");
+            }
+
+            return new TransactionResponseDto
+            {
+                TransactionId = t.Id,
+                TransactionDate = t.TransactionDate,
+                CustomerId = t.CustomerId,
+                PaymentMethod = t.PaymentMethod,
+                TotalAmount = t.TotalAmount,
+                InvoiceNumber = $"INV/{t.TransactionDate:yyyyMMdd}/{t.Id}",
+                Details = t.TransactionDetail.Select(d => new TransactionDetailResponseDto
+                {
+                    ProductId = d.ProductId,
+                    ProductName = d.Product.ProductName ?? "Unknown",
+                    Qty = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    SubTotal = d.SubTotal
+                }).ToList()
+            };
+        }
     }
 }

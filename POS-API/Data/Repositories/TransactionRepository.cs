@@ -38,7 +38,14 @@ namespace POS_API.Data.Repositories
                 .ToListAsync();
         }
 
-
+        public async Task<Transaction?> GetByIdAsync(long id)
+        {
+            return await _context.Transactions
+                .Include(t => t.Customer)
+                .Include(t => t.TransactionDetail)
+                .ThenInclude(td => td.Product)
+                .FirstOrDefaultAsync(t => t.Id == id);
+        }
 
     }
 }

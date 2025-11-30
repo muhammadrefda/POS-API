@@ -9,6 +9,7 @@ namespace POS_API.Interfaces
         Task<Transaction> CreateAsync(Transaction transaction);
 
         Task<IEnumerable<Transaction>> GetAllAsync();
+        Task<Transaction?> GetByIdAsync(long id);
 
         Task<IDbContextTransaction> BeginTransactionAsync();
 

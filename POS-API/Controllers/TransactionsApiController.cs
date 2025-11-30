@@ -79,8 +79,29 @@ namespace POS_API.Controllers
             {
                 return StatusCode(500, new
                 {
-                    Message = ex.Message
+                    Message = ex.Message,
                 });
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(long id)
+        {
+            try
+            {
+                var result = await _transactionService.GetTransactionByidAsync(id);
+
+                if (result == null)
+                {
+                    return NotFound(new ApiResponse<object>("Transaction not found"));
+                }
+
+                return Ok(new ApiResponse<TransactionResponseDto>(result, "Product retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                var errorResponse = new ApiResponse<object>($"An error occurred: {ex.Message}");
+                return StatusCode(500, errorResponse);
             }
         }
 

@@ -7,5 +7,7 @@ namespace POS_API.Interfaces
     {
         Task<Transaction> CreateTransactionAsync(TransactionCreateDto req, long cashierId);
         Task<IEnumerable<TransactionResponseDto>> GetAllTransactionsAsync();
+
+        Task<TransactionResponseDto> GetTransactionByidAsync(long id);
     }
 }

@@ -68,6 +68,9 @@ namespace POS_API
 
 
 
+
+
+
             string Base64UrlToBase64(string base64url)
             {
                 string output = base64url.Replace('-', '+').Replace('_', '/');
@@ -103,6 +106,9 @@ namespace POS_API
                     ValidateAudience = false
                 };
             });
+
+
+            System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 
 
