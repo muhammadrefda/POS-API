@@ -9,5 +9,8 @@ namespace POS_API.Interfaces
 
         //method ini akan mengembalikkan Token (string)
         Task<string> LoginAsync(LoginDto request);
+        Task<IEnumerable<UserDto>> GetAllUsersAsync();
+        Task<bool> DeleteUserAsync(long id);
+        Task<bool> ResetPasswordAsync(long id, string newPassword);
     }
 }
