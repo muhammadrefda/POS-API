@@ -8,17 +8,45 @@ namespace POS_API.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ITransactionRepository _transactionRepo;
+        private readonly IProductRepository _productRepo;
 
-        public TransactionService(ApplicationDbContext context)
+
+        public TransactionService(ITransactionRepository transactionRepo, IProductRepository productRepo)
         {
-            _context = context;
+            _transactionRepo = transactionRepo;
+            _productRepo = productRepo;
 
         }
+
+        public async Task<IEnumerable<TransactionResponseDto>> GetAllTransactionsAsync()
+        {
+            var transactions = await _transactionRepo.GetAllAsync();
+
+            return transactions.Select(t => new TransactionResponseDto
+            {
+                TransactionId = t.Id,
+                TransactionDate = t.TransactionDate,
+                CustomerId = t.CustomerId,
+                PaymentMethod = t.PaymentMethod,
+                TotalAmount = t.TotalAmount,
+                InvoiceNumber = $"INV/{t.TransactionDate:yyyyMMdd}/{t.Id}",
+                Details = t.TransactionDetail.Select(d => new TransactionDetailResponseDto
+                {
+                    ProductId = d.ProductId,
+                    ProductName = d.Product.ProductName ?? "Unknown",
+                    Qty = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    SubTotal = d.SubTotal
+                }).ToList()
+            });
+        }
+
+
+
         public async Task<Transaction> CreateTransactionAsync(TransactionCreateDto req, long cashierId)
         {
-            //transaction db
-            using var dbTransaction = await _context.Database.BeginTransactionAsync();
+            using var dbTransaction = await _transactionRepo.BeginTransactionAsync();
 
             try
             {
@@ -32,16 +60,13 @@ namespace POS_API.Services
                     TotalAmount = 0, // nanti kita hitung belakangan
                 };
 
-                _context.Transactions.Add(newTrans);
-                await _context.SaveChangesAsync(); // di save biar dapetin ID Transactionnya
-
                 decimal grandTotal = 0;
 
                 //looping barang belanjaan
                 foreach (var item in req.Details)
                 {
                     //ngecek produk ada ga?
-                    var product = await _context.Products.FindAsync(item.ProductId);
+                    var product = await _productRepo.GetByIdAsync(item.ProductId);
                     if (product == null)
                     {
                         throw new Exception($" Product ID {item.ProductId} Not Found");
@@ -67,21 +92,17 @@ namespace POS_API.Services
                         UnitPrice = product.Price,
                         SubTotal = subTotal
                     };
-
-                    _context.TransactionDetails.Add(detail);
                 }
 
                 //update total harga di header transaction
                 newTrans.TotalAmount = grandTotal;
-                _context.Transactions.Update(newTrans);
 
-                await _context.SaveChangesAsync();
-
+                var savedTrx = await _transactionRepo.CreateAsync(newTrans);
 
                 await dbTransaction.CommitAsync();
 
 
-                return newTrans;
+                return savedTrx;
 
             }
             catch (Exception)

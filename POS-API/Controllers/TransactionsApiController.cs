@@ -62,5 +62,28 @@ namespace POS_API.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+
+                var result = await _transactionService.GetAllTransactionsAsync();
+                var response = new ApiResponse<IEnumerable<TransactionResponseDto>>(result, "Transactions retrieved successfully");
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+
+
     }
 }
