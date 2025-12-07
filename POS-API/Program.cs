@@ -52,6 +52,7 @@ namespace POS_API
             builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             
             // End of Repositories
 
