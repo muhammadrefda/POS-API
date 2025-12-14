@@ -43,7 +43,7 @@ namespace POS_API.Controllers
 
         // Endpoint ini dipakai Admin untuk mendaftarkan Kasir/Admin baru
         [HttpPost("register")]
-        [Authorize(Roles = "Admin")] // <--- Gembok Otomatis (Gak perlu cek IF Role == Admin lagi)
+        //[Authorize(Roles = "Admin")] // <--- Gembok Otomatis (Gak perlu cek IF Role == Admin lagi)
         public async Task<IActionResult> Register(RegisterDto req)
         {
             try
