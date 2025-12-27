@@ -28,6 +28,7 @@ namespace POS_API.Services
                 Price = p.Price,
                 Stock = p.Stock,
                 Active = p.Active,
+                Tags = p.ProductTags.Select(pt => pt.Tag.TagName).ToList()
             });
         }
 
@@ -47,6 +48,7 @@ namespace POS_API.Services
                 Price = product.Price,
                 Stock = product.Stock,
                 Active = product.Active,
+                Tags = product.ProductTags.Select(pt => pt.Tag.TagName).ToList()
             };
         }
 
@@ -61,6 +63,18 @@ namespace POS_API.Services
                 Stock = productDto.Stock,
                 Active = true
             };
+
+            // Handle Tags
+            if (productDto.TagIds != null && productDto.TagIds.Any())
+            {
+                foreach (var tagId in productDto.TagIds)
+                {
+                    productEntity.ProductTags.Add(new ProductTag
+                    {
+                        TagId = tagId
+                    });
+                }
+            }
 
             //2. kirim ke repository untuk disimpan
             var newEntity = await _productRepo.CreateAsync(productEntity);
@@ -77,6 +91,7 @@ namespace POS_API.Services
                 Price = resultEntity.Price,
                 Stock = resultEntity.Stock,
                 Active = resultEntity.Active,
+                Tags = resultEntity.ProductTags.Select(pt => pt.Tag.TagName).ToList()
             };
         }
 
@@ -96,6 +111,23 @@ namespace POS_API.Services
             existingProduct.Price = productDto.Price;
             existingProduct.Stock = productDto.Stock;
             existingProduct.Active = productDto.Active;
+
+            // Update Tags
+            // Clear existing tags
+            existingProduct.ProductTags.Clear();
+
+            // Add new tags
+            if (productDto.TagIds != null && productDto.TagIds.Any())
+            {
+                foreach (var tagId in productDto.TagIds)
+                {
+                    existingProduct.ProductTags.Add(new ProductTag
+                    {
+                        ProductId = existingProduct.Id, // Ensure link
+                        TagId = tagId
+                    });
+                }
+            }
 
             //4. kirim entity yg udh di update ke repository
             await _productRepo.UpdateAsync(existingProduct);

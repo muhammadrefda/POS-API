@@ -15,12 +15,20 @@ namespace POS_API.Data.Repositories
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            return await _context.Products.Include(p => p.Category).ToListAsync();
+            return await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductTags)
+                .ThenInclude(pt => pt.Tag)
+                .ToListAsync();
         }
 
         public async Task<Product?> GetByIdAsync(long id)
         {
-            return await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductTags)
+                .ThenInclude(pt => pt.Tag)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
         public async Task<Product> CreateAsync(Product product)
         {

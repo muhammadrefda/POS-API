@@ -6,6 +6,7 @@ using POS_API.Data;
 using POS_API.Data.Repositories;
 using POS_API.Interfaces;
 using POS_API.Services;
+using System.Security.Claims;
 
 namespace POS_API
 {
@@ -53,6 +54,7 @@ namespace POS_API
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+            builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
             
             // End of Repositories
 
@@ -64,6 +66,7 @@ namespace POS_API
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ITransactionService, TransactionService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
 
             // End of Services
 
@@ -104,7 +107,9 @@ namespace POS_API
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                     ValidateIssuer = false,
-                    ValidateAudience = false
+                    ValidateAudience = false,
+
+                    RoleClaimType = ClaimTypes.Role
                 };
             });
 
@@ -128,12 +133,14 @@ namespace POS_API
             }
 
             app.UseHttpsRedirection();
+            app.UseCors(MyAllowSpecificOrigins);
+            
             app.UseAuthentication();
             app.UseAuthorization();
+            
             app.UseStaticFiles();
 
 
-            app.UseCors(MyAllowSpecificOrigins);
 
             app.MapControllers();
 
