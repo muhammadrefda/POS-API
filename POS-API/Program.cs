@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using POS_API.Data;
 using POS_API.Data.Repositories;
 using POS_API.Interfaces;
@@ -48,6 +50,28 @@ namespace POS_API
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<ITagService, TagService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+
+            var secretKey = builder.Configuration["JwtSettings:SecretKey"];
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                var keyBytes = Convert.FromBase64String(secretKey!);
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
+
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -64,13 +88,12 @@ namespace POS_API
             }
 
             app.UseHttpsRedirection();
+            app.UseAuthentication(); // Cek Token
+            app.UseAuthorization();  // Cek Role
             app.UseStaticFiles();
 
 
             app.UseCors(MyAllowSpecificOrigins);
-
-            app.UseAuthorization();
-
 
             app.MapControllers();
 

@@ -6,6 +6,8 @@ namespace POS_API.DTOs
     {
         [Required(ErrorMessage = "Category name is required")]
         [StringLength(100)]
-        public string Name { get; set; }
+        public string CategoryName { get; set; }
+        public string Description { get; set; }
+        public bool IsActive { get; set; } = true!;
     }
 }

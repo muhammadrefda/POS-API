@@ -115,61 +115,61 @@ namespace POS_API.Migrations
             //            onDelete: ReferentialAction.Cascade);
             //    });
 
-            migrationBuilder.CreateTable(
-                name: "ProductTags",
-                columns: table => new
-                {
-                    ProductId = table.Column<long>(type: "bigint", nullable: false),
-                    TagId = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProductTags", x => new { x.ProductId, x.TagId });
-                    table.ForeignKey(
-                        name: "FK_ProductTags_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ProductTags_Tags_TagId",
-                        column: x => x.TagId,
-                        principalTable: "Tags",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            //migrationBuilder.CreateTable(
+            //    name: "ProductTags",
+            //    columns: table => new
+            //    {
+            //        ProductId = table.Column<long>(type: "bigint", nullable: false),
+            //        TagId = table.Column<long>(type: "bigint", nullable: false)
+            //    },
+            //    constraints: table =>
+            //    {
+            //        table.PrimaryKey("PK_ProductTags", x => new { x.ProductId, x.TagId });
+            //        table.ForeignKey(
+            //            name: "FK_ProductTags_Products_ProductId",
+            //            column: x => x.ProductId,
+            //            principalTable: "Products",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //        table.ForeignKey(
+            //            name: "FK_ProductTags_Tags_TagId",
+            //            column: x => x.TagId,
+            //            principalTable: "Tags",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //    });
 
-            migrationBuilder.CreateTable(
-                name: "TransactionDetails",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    SubTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
-                    ProductId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TransactionDetails", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TransactionDetails_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TransactionDetails_Transactions_TransactionId",
-                        column: x => x.TransactionId,
-                        principalTable: "Transactions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            //migrationBuilder.CreateTable(
+            //    name: "TransactionDetails",
+            //    columns: table => new
+            //    {
+            //        Id = table.Column<long>(type: "bigint", nullable: false)
+            //            .Annotation("SqlServer:Identity", "1, 1"),
+            //        Quantity = table.Column<int>(type: "int", nullable: false),
+            //        UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+            //        SubTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+            //        TransactionId = table.Column<long>(type: "bigint", nullable: false),
+            //        ProductId = table.Column<long>(type: "bigint", nullable: false),
+            //        CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+            //        UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+            //        DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+            //    },
+            //    constraints: table =>
+            //    {
+            //        table.PrimaryKey("PK_TransactionDetails", x => x.Id);
+            //        table.ForeignKey(
+            //            name: "FK_TransactionDetails_Products_ProductId",
+            //            column: x => x.ProductId,
+            //            principalTable: "Products",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //        table.ForeignKey(
+            //            name: "FK_TransactionDetails_Transactions_TransactionId",
+            //            column: x => x.TransactionId,
+            //            principalTable: "Transactions",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //    });
 
             //migrationBuilder.InsertData(
             //    table: "Categories",
@@ -191,30 +191,30 @@ namespace POS_API.Migrations
             //    columns: new[] { "Id", "Active", "CategoryId", "CreatedAt", "DeletedAt", "Price", "ProductName", "Stock", "UpdatedAt" },
             //    values: new object[] { 1L, true, 1L, new DateTime(2025, 11, 16, 21, 0, 49, 33, DateTimeKind.Local).AddTicks(8550), null, 15000m, "Keripik Kentang Original", 100, null });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_CategoryId",
-                table: "Products",
-                column: "CategoryId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_Products_CategoryId",
+            //    table: "Products",
+            //    column: "CategoryId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductTags_TagId",
-                table: "ProductTags",
-                column: "TagId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_ProductTags_TagId",
+            //    table: "ProductTags",
+            //    column: "TagId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_TransactionDetails_ProductId",
-                table: "TransactionDetails",
-                column: "ProductId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_TransactionDetails_ProductId",
+            //    table: "TransactionDetails",
+            //    column: "ProductId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_TransactionDetails_TransactionId",
-                table: "TransactionDetails",
-                column: "TransactionId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_TransactionDetails_TransactionId",
+            //    table: "TransactionDetails",
+            //    column: "TransactionId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Transactions_CustomerId",
-                table: "Transactions",
-                column: "CustomerId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_Transactions_CustomerId",
+            //    table: "Transactions",
+            //    column: "CustomerId");
         }
 
         /// <inheritdoc />

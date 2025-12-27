@@ -23,7 +23,9 @@ namespace POS_API.Services
             return categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
-                Name = c.CategoryName
+                Name = c.CategoryName,
+                Description = c.Description,
+                Active = c.Active
             });
         }
 
@@ -49,7 +51,9 @@ namespace POS_API.Services
             // 1. Mapping dari DTO ke Entity
             var categoryEntity = new Category
             {
-                CategoryName = categoryDto.Name
+                CategoryName = categoryDto.CategoryName,
+                Description = categoryDto.Description,
+                Active = true
             };
 
             // 2. Kirim ke Repository untuk disimpan

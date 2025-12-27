@@ -17,6 +17,8 @@ namespace POS_API.Data
 
         public DbSet<ProductTag> ProductTags { get; set; }
 
+        public DbSet<User> Users { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

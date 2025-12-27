@@ -47,7 +47,6 @@ namespace POS_API.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Ambil error dari ModelState
                 var errors = ModelState.Values.SelectMany(v => v.Errors).First().ErrorMessage;
                 var errorResponse = new ApiResponse<CategoryDto>(errors ?? "Invalid data provided");
                 return BadRequest(errorResponse);
