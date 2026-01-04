@@ -7,6 +7,7 @@ using POS_API.Data.Repositories;
 using POS_API.Interfaces;
 using POS_API.Services;
 using System.Security.Claims;
+using System.Text;
 
 namespace POS_API
 {
@@ -92,9 +93,9 @@ namespace POS_API
 
 
 
-            var normalBase64 = Base64UrlToBase64(secretKey!);
+           // var normalBase64 = Base64UrlToBase64(secretKey!);
 
-            var keyBytes = Convert.FromBase64String(normalBase64);
+           // var keyBytes = Convert.FromBase64String(normalBase64);
 
             builder.Services.AddAuthentication(options =>
             {
@@ -105,7 +106,10 @@ namespace POS_API
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                    //IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(secretKey!)
+                        ),
                     ValidateIssuer = false,
                     ValidateAudience = false,
 

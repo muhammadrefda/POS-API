@@ -19,10 +19,10 @@ namespace POS_API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {
-            var customers = await _customerService.GetAllAsync();
-            var response = new ApiResponse<IEnumerable<CustomerDto>>(customers, "Customers retrieved successfully");
+            var pagedCustomers = await _customerService.GetPagedAsync(pageNumber, pageSize, search);
+            var response = ApiPagedResponse<CustomerDto>.Success(pagedCustomers, "Customers retrieved successfully");
             return Ok(response);
         }
 

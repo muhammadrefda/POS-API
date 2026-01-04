@@ -18,21 +18,38 @@ namespace POS_API.Controllers
         }
 
         // GET: api/CategoriesApi
-        // Perubahan 1: Return type diubah ke ApiResponse
+        // Perubahan 1: Return type diubah ke ApiPagedResponse
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<IEnumerable<Category>>>> GetCategories()
+        public async Task<IActionResult> GetCategories([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {
             try // Perubahan 2: Dibungkus try-catch
             {
-                var categories = await _context.Categories.ToListAsync();
+                var query = _context.Categories.AsQueryable();
 
-                // Perubahan 3: Dibungkus ApiResponse sukses
-                return Ok(new ApiResponse<IEnumerable<Category>>(categories, "Data kategori berhasil diambil"));
+                // Logic Filter / Pencarian
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    search = search.ToLower();
+                    query = query.Where(c => c.CategoryName.ToLower().Contains(search) || 
+                                             (c.Description != null && c.Description.ToLower().Contains(search)));
+                }
+
+                var totalRecords = await query.CountAsync();
+                
+                var categories = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var pagedResponse = new PagedResponse<Category>(categories, totalRecords, pageNumber, pageSize);
+
+                // Perubahan 3: Dibungkus ApiPagedResponse sukses
+                return Ok(ApiPagedResponse<Category>.Success(pagedResponse, "Data kategori berhasil diambil"));
             }
             catch (Exception ex)
             {
-                // Perubahan 4: Dibungkus ApiResponse gagal
-                return StatusCode(500, new ApiResponse<IEnumerable<Category>>($"Error server: {ex.Message}"));
+                // Perubahan 4: Dibungkus ApiResponse gagal (tetap pakai ApiResponse biasa untuk error global, atau sesuaikan)
+                return StatusCode(500, new ApiResponse<object>($"Error server: {ex.Message}"));
             }
         }
 

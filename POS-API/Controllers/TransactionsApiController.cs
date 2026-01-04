@@ -65,13 +65,13 @@ namespace POS_API.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {
             try
             {
 
-                var result = await _transactionService.GetAllTransactionsAsync();
-                var response = new ApiResponse<IEnumerable<TransactionResponseDto>>(result, "Transactions retrieved successfully");
+                var result = await _transactionService.GetPagedAsync(pageNumber, pageSize, search);
+                var response = ApiPagedResponse<TransactionResponseDto>.Success(result, "Transactions retrieved successfully");
 
                 return Ok(response);
             }

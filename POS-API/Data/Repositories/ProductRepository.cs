@@ -22,6 +22,31 @@ namespace POS_API.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<(IEnumerable<Product> Data, int TotalRecords)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var query = _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductTags)
+                .ThenInclude(pt => pt.Tag)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+                query = query.Where(p => p.ProductName.ToLower().Contains(searchTerm) || 
+                                         p.Category.CategoryName.ToLower().Contains(searchTerm));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalRecords);
+        }
+
         public async Task<Product?> GetByIdAsync(long id)
         {
             return await _context.Products

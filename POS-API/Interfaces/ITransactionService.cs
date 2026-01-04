@@ -1,4 +1,5 @@
-﻿using POS_API.DTOs;
+﻿using POS_API.Helpers;
+using POS_API.DTOs;
 using POS_API.Models;
 
 namespace POS_API.Interfaces
@@ -7,6 +8,7 @@ namespace POS_API.Interfaces
     {
         Task<Transaction> CreateTransactionAsync(TransactionCreateDto req, long cashierId);
         Task<IEnumerable<TransactionResponseDto>> GetAllTransactionsAsync();
+        Task<PagedResponse<TransactionResponseDto>> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm);
 
         Task<TransactionResponseDto> GetTransactionByidAsync(long id);
     }

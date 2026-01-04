@@ -73,13 +73,19 @@ namespace POS_API.Services
                 new Claim("Id", user.Id.ToString()),
             };
 
-            var secretKey = _configuration.GetSection("JwtSettings:SecretKey").Value!;
+            // var secretKey = _configuration.GetSection("JwtSettings:SecretKey").Value!;
 
-            var normalBase64 = Base64UrlToBase64(secretKey!);
-            var keyBytes = Convert.FromBase64String(normalBase64);
-            var key = new SymmetricSecurityKey(keyBytes);
+            //var normalBase64 = Base64UrlToBase64(secretKey!);
+            //var keyBytes = Convert.FromBase64String(normalBase64);
+            //var key = new SymmetricSecurityKey(keyBytes);
 
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            //            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var key = new SymmetricSecurityKey(
+      Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]!)
+  );
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 claims: claims,

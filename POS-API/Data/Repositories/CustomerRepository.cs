@@ -19,6 +19,28 @@ namespace POS_API.Data.Repositories
             return await _context.Customers.Where(c => c.DeletedAt == null).ToListAsync();
         }
 
+        public async Task<(IEnumerable<Customer> Data, int TotalRecords)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var query = _context.Customers.Where(c => c.DeletedAt == null).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+                query = query.Where(c => c.FullName.ToLower().Contains(searchTerm) || 
+                                         c.Email.ToLower().Contains(searchTerm) || 
+                                         c.PhoneNumber.Contains(searchTerm));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalRecords);
+        }
+
         public async Task<Customer> GetByIdAsync(long id)
         {
             return await _context.Customers.FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);

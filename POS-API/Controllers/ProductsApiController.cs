@@ -23,11 +23,11 @@ namespace POS_API.Controllers
 
         //get api
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {
-            var products = await _productService.GetAllAsync();
+            var pagedProducts = await _productService.GetPagedAsync(pageNumber, pageSize, search);
 
-            var response = new ApiResponse<IEnumerable<ProductDto>>(products, "Products retrieved successfully");
+            var response = ApiPagedResponse<ProductDto>.Success(pagedProducts, "Products retrieved successfully");
 
             return Ok(response);
         }

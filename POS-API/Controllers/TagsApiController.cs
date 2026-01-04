@@ -19,10 +19,10 @@ namespace POS_API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {
-            var tags = await _tagService.GetAllAsync();
-            var response = new ApiResponse<IEnumerable<TagDto>>(tags, "Tags retrieved successfully");
+            var pagedTags = await _tagService.GetPagedAsync(pageNumber, pageSize, search);
+            var response = ApiPagedResponse<TagDto>.Success(pagedTags, "Tags retrieved successfully");
 
             return Ok(response);
         }

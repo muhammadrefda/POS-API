@@ -1,6 +1,7 @@
 ﻿using POS_API.DTOs;
 using POS_API.Interfaces;
 using POS_API.Models;
+using POS_API.Helpers;
 
 namespace POS_API.Services
 {
@@ -21,6 +22,19 @@ namespace POS_API.Services
                 Id = tag.Id,
                 TagName = tag.TagName
             });
+        }
+
+        public async Task<PagedResponse<TagDto>> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var (tags, totalRecords) = await _tagRepository.GetPagedAsync(pageNumber, pageSize, searchTerm);
+            
+            var tagDtos = tags.Select(tag => new TagDto
+            {
+                Id = tag.Id,
+                TagName = tag.TagName
+            });
+
+            return new PagedResponse<TagDto>(tagDtos, totalRecords, pageNumber, pageSize);
         }
 
         public async Task<TagDto> GetByIdAsync(long id)

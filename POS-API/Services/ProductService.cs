@@ -1,6 +1,7 @@
 ﻿using POS_API.DTOs;
 using POS_API.Interfaces;
 using POS_API.Models;
+using POS_API.Helpers;
 
 namespace POS_API.Services
 {
@@ -30,6 +31,24 @@ namespace POS_API.Services
                 Active = p.Active,
                 Tags = p.ProductTags.Select(pt => pt.Tag.TagName).ToList()
             });
+        }
+
+        public async Task<PagedResponse<ProductDto>> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var (products, totalRecords) = await _productRepo.GetPagedAsync(pageNumber, pageSize, searchTerm);
+
+            var productDtos = products.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                ProductName = p.ProductName,
+                CategoryName = p.Category?.CategoryName ?? "Uncategorized",
+                Price = p.Price,
+                Stock = p.Stock,
+                Active = p.Active,
+                Tags = p.ProductTags.Select(pt => pt.Tag.TagName).ToList()
+            });
+
+            return new PagedResponse<ProductDto>(productDtos, totalRecords, pageNumber, pageSize);
         }
 
         public async Task<ProductDto?> GetByIdAsync(long id)

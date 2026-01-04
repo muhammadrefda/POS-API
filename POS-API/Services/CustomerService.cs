@@ -1,6 +1,7 @@
 ﻿using POS_API.DTOs;
 using POS_API.Interfaces;
 using POS_API.Models;
+using POS_API.Helpers;
 
 namespace POS_API.Services
 {
@@ -26,6 +27,23 @@ namespace POS_API.Services
                 Active = (c.DeletedAt == null),
                 JoinDate = c.CreatedAt
             });
+        }
+
+        public async Task<PagedResponse<CustomerDto>> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var (customers, totalRecords) = await _customerRepo.GetPagedAsync(pageNumber, pageSize, searchTerm);
+
+            var customerDtos = customers.Select(c => new CustomerDto
+            {
+                Id = c.Id,
+                FullName = c.FullName,
+                PhoneNumber = c.PhoneNumber,
+                Email = c.Email,
+                Active = (c.DeletedAt == null),
+                JoinDate = c.CreatedAt
+            });
+
+            return new PagedResponse<CustomerDto>(customerDtos, totalRecords, pageNumber, pageSize);
         }
 
         public async Task<CustomerDto?> GetByIdAsync(long id)

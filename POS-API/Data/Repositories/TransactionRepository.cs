@@ -38,6 +38,42 @@ namespace POS_API.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<(IEnumerable<Transaction> Data, int TotalRecords)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var query = _context.Transactions
+                .Include(t => t.Customer)
+                .Include(t => t.TransactionDetail)
+                .ThenInclude(td => td.Product)
+                .OrderByDescending(t => t.TransactionDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+
+                // Jika search term adalah angka, coba cari by ID
+                if (long.TryParse(searchTerm, out long searchId))
+                {
+                     query = query.Where(t => t.Id == searchId);
+                }
+                else
+                {
+                    // Cari by Nama Customer atau Payment Method
+                    query = query.Where(t => t.Customer.FullName.ToLower().Contains(searchTerm) || 
+                                             t.PaymentMethod.ToLower().Contains(searchTerm));
+                }
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalRecords);
+        }
+
         public async Task<Transaction?> GetByIdAsync(long id)
         {
             return await _context.Transactions

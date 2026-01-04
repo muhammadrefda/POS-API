@@ -3,6 +3,7 @@ using POS_API.Models;
 using POS_API.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POS_API.Data;
+using POS_API.Helpers;
 
 namespace POS_API.Services
 {
@@ -40,6 +41,31 @@ namespace POS_API.Services
                     SubTotal = d.SubTotal
                 }).ToList()
             });
+        }
+
+        public async Task<PagedResponse<TransactionResponseDto>> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm)
+        {
+            var (transactions, totalRecords) = await _transactionRepo.GetPagedAsync(pageNumber, pageSize, searchTerm);
+
+            var transactionDtos = transactions.Select(t => new TransactionResponseDto
+            {
+                TransactionId = t.Id,
+                TransactionDate = t.TransactionDate,
+                CustomerId = t.CustomerId,
+                PaymentMethod = t.PaymentMethod,
+                TotalAmount = t.TotalAmount,
+                InvoiceNumber = $"INV/{t.TransactionDate:yyyyMMdd}/{t.Id}",
+                Details = t.TransactionDetail.Select(d => new TransactionDetailResponseDto
+                {
+                    ProductId = d.ProductId,
+                    ProductName = d.Product.ProductName ?? "Unknown",
+                    Qty = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    SubTotal = d.SubTotal
+                }).ToList()
+            });
+
+            return new PagedResponse<TransactionResponseDto>(transactionDtos, totalRecords, pageNumber, pageSize);
         }
 
 
