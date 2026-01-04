@@ -76,17 +76,17 @@ namespace POS_API
 
 
 
-            string Base64UrlToBase64(string base64url)
-            {
-                string output = base64url.Replace('-', '+').Replace('_', '/');
-                switch (output.Length % 4)
-                {
-                    case 2: output += "=="; break;
-                    case 3: output += "="; break;
-                }
+            //string Base64UrlToBase64(string base64url)
+            //{
+            //    string output = base64url.Replace('-', '+').Replace('_', '/');
+            //    switch (output.Length % 4)
+            //    {
+            //        case 2: output += "=="; break;
+            //        case 3: output += "="; break;
+            //    }
 
-                return output;
-            }
+            //    return output;
+            //}
 
 
             var secretKey = builder.Configuration["JwtSettings:SecretKey"];

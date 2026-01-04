@@ -30,8 +30,7 @@ namespace POS_API.Controllers
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     search = search.ToLower();
-                    query = query.Where(c => c.CategoryName.ToLower().Contains(search) || 
-                                             (c.Description != null && c.Description.ToLower().Contains(search)));
+                    query = query.Where(c => c.CategoryName.ToLower().Contains(search));
                 }
 
                 var totalRecords = await query.CountAsync();

@@ -82,8 +82,8 @@ namespace POS_API.Services
             //            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var key = new SymmetricSecurityKey(
-      Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]!)
-  );
+                  Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]!)
+              );
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
