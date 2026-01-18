@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # 1. Kontainer Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pos_sql_server
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=PasswordKuat123! # Minta Ali buat password yang unik
+    ports:
+      - "1433:1433"
+    networks:
+      - pos_network
+
+  # 2. Kontainer Backend (.NET API)
+  api:
+    build: 
+      context: ./POS-API # Arahkan ke folder Backend Mas
+      dockerfile: Dockerfile
+    container_name: pos_backend_api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # POIN PENTING: Server diganti dari 'localhost' menjadi 'db' (nama service di atas)
+      - ConnectionStrings__DefaultConnection=Server=db;Database=PointOfSalesDB;User Id=sa;Password=PasswordKuat123!;Encrypt=False;TrustServerCertificate=True;
+    depends_on:
+      - db
+    networks:
+      - pos_network
+
+networks:
+  pos_network:
+    driver: bridge
